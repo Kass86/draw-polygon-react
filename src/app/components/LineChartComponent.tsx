@@ -594,6 +594,23 @@ const LineChartComponent = () => {
                 r={3}
                 fill="red"
               />
+              {isDrawing &&
+                firstPoint &&
+                currentLine &&
+                (polygons.find((p) => p.id === currentPolygonId)?.lines
+                  .length ??
+                  0 >= 1) && (
+                  <line
+                    x1={currentLine.x2}
+                    y1={currentLine.y2}
+                    x2={firstPoint.x}
+                    y2={firstPoint.y}
+                    stroke="gray"
+                    strokeWidth="1.5"
+                    strokeDasharray="5,5"
+                    pointerEvents="none"
+                  />
+                )}
             </React.Fragment>
           )}
         </svg>
