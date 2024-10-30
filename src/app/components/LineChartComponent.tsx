@@ -455,32 +455,44 @@ const LineChartComponent = () => {
     }
   };
 
-  const mouseUp = () => {
-    if (isDrawing && startPoint && currentLine) {
-      setPolygons((prevPolygons) =>
-        prevPolygons.map((polygon) => {
-          if (polygon.id === currentPolygonId) {
-            return {
-              ...polygon,
-              lines: [
-                ...polygon.lines,
-                {
-                  x1: currentLine.x1,
-                  y1: currentLine.y1,
-                  x2: currentLine.x2,
-                  y2: currentLine.y2,
-                },
-              ],
-            };
-          }
-          return polygon;
-        })
-      );
-      setStartPoint({ x: currentLine.x2, y: currentLine.y2 });
-      setLineCount((prev) => prev + 1);
-    }
-    setDraggingPolygon(null);
-    setDraggingPoint(null);
+  // Thêm useEffect mới để xử lý mouseup toàn cục
+  useEffect(() => {
+    const handleGlobalMouseUp = (e: MouseEvent) => {
+      if (isDrawing && startPoint && currentLine) {
+        setPolygons((prevPolygons) =>
+          prevPolygons.map((polygon) => {
+            if (polygon.id === currentPolygonId) {
+              return {
+                ...polygon,
+                lines: [
+                  ...polygon.lines,
+                  {
+                    x1: currentLine.x1,
+                    y1: currentLine.y1,
+                    x2: currentLine.x2,
+                    y2: currentLine.y2,
+                  },
+                ],
+              };
+            }
+            return polygon;
+          })
+        );
+        setStartPoint({ x: currentLine.x2, y: currentLine.y2 });
+        setLineCount((prev) => prev + 1);
+      }
+      setDraggingPolygon(null);
+      setDraggingPoint(null);
+    };
+
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener("mouseup", handleGlobalMouseUp);
+    };
+  }, [isDrawing, startPoint, currentLine, currentPolygonId]);
+
+  const mouseUp = (e: React.MouseEvent<SVGSVGElement>) => {
+    // Có thể xóa vì đã được xử lý bởi global mouseup
   };
 
   const handleCircleMouseDown = (
