@@ -457,7 +457,7 @@ const LineChartComponent = () => {
 
   // Thêm useEffect mới để xử lý mouseup toàn cục
   useEffect(() => {
-    const handleGlobalMouseUp = (e: MouseEvent) => {
+    const handleGlobalMouseUp = () => {
       if (isDrawing && startPoint && currentLine) {
         setPolygons((prevPolygons) =>
           prevPolygons.map((polygon) => {
@@ -491,7 +491,7 @@ const LineChartComponent = () => {
     };
   }, [isDrawing, startPoint, currentLine, currentPolygonId]);
 
-  const mouseUp = (e: React.MouseEvent<SVGSVGElement>) => {
+  const mouseUp = () => {
     // Có thể xóa vì đã được xử lý bởi global mouseup
   };
 
