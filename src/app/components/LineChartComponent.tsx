@@ -316,7 +316,7 @@ const LineChartComponent = () => {
     }
   };
 
-  const mouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const mouseMove = () => {
     if (draggingPolygon && prevMousePosition) {
       const deltaX = xCord - prevMousePosition.x;
       const deltaY = yCord - prevMousePosition.y;
@@ -367,7 +367,6 @@ const LineChartComponent = () => {
         return prevPolygons.map((polygon) => {
           if (polygon.id === polygonId) {
             const newLines = [...polygon.lines];
-            const updatedLines = [...newLines];
 
             if (point === "start") {
               // Tạo bản sao của lines để kiểm tra trước khi cập nhật
@@ -456,7 +455,7 @@ const LineChartComponent = () => {
     }
   };
 
-  const mouseUp = (e: React.MouseEvent<SVGSVGElement>) => {
+  const mouseUp = () => {
     if (isDrawing && startPoint && currentLine) {
       setPolygons((prevPolygons) =>
         prevPolygons.map((polygon) => {
