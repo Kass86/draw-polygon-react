@@ -40,3 +40,8 @@ a {
     color-scheme: dark;
   }
 }
+
+.y-axis-title {
+  transform: rotate(0deg); /* Xoay tiêu đề trục y ngang */
+  transform-origin: center;
+}
