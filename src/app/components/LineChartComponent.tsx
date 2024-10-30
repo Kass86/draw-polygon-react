@@ -317,7 +317,84 @@ const LineChartComponent = () => {
   };
 
   const mouseMove = () => {
-    if (draggingPolygon && prevMousePosition) {
+    if (draggingPoint) {
+      const { polygonId, lineIndex, point } = draggingPoint;
+      const clampedX = clamp(xCord, 0, 800);
+      const clampedY = clamp(yCord, 0, 450);
+
+      setPolygons((prevPolygons) => {
+        return prevPolygons.map((polygon) => {
+          if (polygon.id === polygonId) {
+            const newLines = [...polygon.lines];
+            const testLines = [...newLines];
+
+            if (point === "start") {
+              testLines[lineIndex] = {
+                ...testLines[lineIndex],
+                x1: clampedX,
+                y1: clampedY,
+              };
+
+              if (lineIndex > 0) {
+                testLines[lineIndex - 1] = {
+                  ...testLines[lineIndex - 1],
+                  x2: clampedX,
+                  y2: clampedY,
+                };
+              } else if (testLines.length > 1) {
+                testLines[testLines.length - 1] = {
+                  ...testLines[testLines.length - 1],
+                  x2: clampedX,
+                  y2: clampedY,
+                };
+              }
+
+              // Kiểm tra va chạm với các đa giác khác
+              const otherPolygons = prevPolygons.filter(
+                (p) => p.id !== polygonId
+              );
+              let hasCollision = false;
+
+              // Kiểm tra va chạm với đa giác khác
+              for (const otherPolygon of otherPolygons) {
+                if (doPolygonsIntersect(testLines, otherPolygon.lines)) {
+                  hasCollision = true;
+                  break;
+                }
+              }
+
+              // Kiểm tra self-intersection
+              if (!hasCollision) {
+                for (let i = 0; i < testLines.length; i++) {
+                  for (let j = i + 2; j < testLines.length; j++) {
+                    // Bỏ qua kiểm tra với các đường thẳng liền kề
+                    if (i === 0 && j === testLines.length - 1) continue;
+                    if (doLinesIntersect(testLines[i], testLines[j])) {
+                      hasCollision = true;
+                      break;
+                    }
+                  }
+                  if (hasCollision) break;
+                }
+              }
+
+              // Nếu có va chạm, giữ nguyên vị trí cũ
+              if (hasCollision) {
+                return polygon;
+              }
+
+              // Nếu không có va chạm, cập nhật vị trí mới
+              return {
+                ...polygon,
+                lines: testLines,
+              };
+            }
+            return polygon;
+          }
+          return polygon;
+        });
+      });
+    } else if (draggingPolygon && prevMousePosition) {
       const deltaX = xCord - prevMousePosition.x;
       const deltaY = yCord - prevMousePosition.y;
 
@@ -358,60 +435,6 @@ const LineChartComponent = () => {
       });
 
       setPrevMousePosition({ x: xCord, y: yCord });
-    } else if (draggingPoint) {
-      const { polygonId, lineIndex, point } = draggingPoint;
-      const clampedX = clamp(xCord, 0, 800);
-      const clampedY = clamp(yCord, 0, 450);
-
-      setPolygons((prevPolygons) => {
-        return prevPolygons.map((polygon) => {
-          if (polygon.id === polygonId) {
-            const newLines = [...polygon.lines];
-
-            if (point === "start") {
-              // Tạo bản sao của lines để kiểm tra trước khi cập nhật
-              const testLines = [...newLines];
-              testLines[lineIndex] = {
-                ...testLines[lineIndex],
-                x1: clampedX,
-                y1: clampedY,
-              };
-
-              if (lineIndex > 0) {
-                testLines[lineIndex - 1] = {
-                  ...testLines[lineIndex - 1],
-                  x2: clampedX,
-                  y2: clampedY,
-                };
-              } else if (testLines.length > 1) {
-                testLines[testLines.length - 1] = {
-                  ...testLines[testLines.length - 1],
-                  x2: clampedX,
-                  y2: clampedY,
-                };
-              }
-
-              // Kiểm tra va chạm với các đa giác khác
-              const otherPolygons = prevPolygons.filter(
-                (p) => p.id !== polygonId
-              );
-              for (const otherPolygon of otherPolygons) {
-                if (doPolygonsIntersect(testLines, otherPolygon.lines)) {
-                  return polygon; // Giữ nguyên vị trí nếu có va chạm
-                }
-              }
-
-              // Nếu không có va chạm, cập nhật vị trí mới
-              return {
-                ...polygon,
-                lines: testLines,
-              };
-            }
-            return polygon;
-          }
-          return polygon;
-        });
-      });
     } else if (isDrawing && startPoint) {
       const clampedX = clamp(xCord, 0, 800);
       const clampedY = clamp(yCord, 0, 450);
