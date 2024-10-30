@@ -459,27 +459,54 @@ const LineChartComponent = () => {
   useEffect(() => {
     const handleGlobalMouseUp = () => {
       if (isDrawing && startPoint && currentLine) {
-        setPolygons((prevPolygons) =>
-          prevPolygons.map((polygon) => {
-            if (polygon.id === currentPolygonId) {
-              return {
-                ...polygon,
-                lines: [
-                  ...polygon.lines,
-                  {
-                    x1: currentLine.x1,
-                    y1: currentLine.y1,
-                    x2: currentLine.x2,
-                    y2: currentLine.y2,
-                  },
-                ],
-              };
+        const currentPolygon = polygons.find((p) => p.id === currentPolygonId);
+
+        if (currentPolygon) {
+          // Tạo mảng lines mới bao gồm line hiện tại
+          const newLines = [...currentPolygon.lines];
+          const newLine = {
+            x1: currentLine.x1,
+            y1: currentLine.y1,
+            x2: currentLine.x2,
+            y2: currentLine.y2,
+          };
+
+          // Kiểm tra line mới có cắt với các line cũ trong cùng polygon không
+          let hasSelfIntersection = false;
+          for (let i = 0; i < newLines.length - 1; i++) {
+            if (doLinesIntersect(newLine, newLines[i])) {
+              hasSelfIntersection = true;
+              break;
             }
-            return polygon;
-          })
-        );
-        setStartPoint({ x: currentLine.x2, y: currentLine.y2 });
-        setLineCount((prev) => prev + 1);
+          }
+
+          if (hasSelfIntersection) {
+            // Nếu có self-intersection, xóa toàn bộ polygon
+            setPolygons((prevPolygons) =>
+              prevPolygons.filter((polygon) => polygon.id !== currentPolygonId)
+            );
+            setIsDrawing(false);
+            setStartPoint(null);
+            setFirstPoint(null);
+            setCurrentLine(null);
+            setLineCount(0);
+          } else {
+            // Nếu không có self-intersection, thêm line mới vào polygon
+            setPolygons((prevPolygons) =>
+              prevPolygons.map((polygon) => {
+                if (polygon.id === currentPolygonId) {
+                  return {
+                    ...polygon,
+                    lines: [...polygon.lines, newLine],
+                  };
+                }
+                return polygon;
+              })
+            );
+            setStartPoint({ x: currentLine.x2, y: currentLine.y2 });
+            setLineCount((prev) => prev + 1);
+          }
+        }
       }
       setDraggingPolygon(null);
       setDraggingPoint(null);
@@ -489,7 +516,7 @@ const LineChartComponent = () => {
     return () => {
       window.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [isDrawing, startPoint, currentLine, currentPolygonId]);
+  }, [isDrawing, startPoint, currentLine, currentPolygonId, polygons]);
 
   const mouseUp = () => {
     // Có thể xóa vì đã được xử lý bởi global mouseup
