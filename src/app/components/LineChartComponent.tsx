@@ -10,6 +10,11 @@ interface Polygon {
   lines: { x1: number; y1: number; x2: number; y2: number }[];
 }
 
+interface Props {
+  polygonState?: Polygon[];
+  onPolygonChange: (polygons: Polygon[]) => void;
+}
+
 console.log("this ok");
 
 const clamp = (value: number, min: number, max: number): number => {
@@ -118,7 +123,7 @@ const isPointInPolygon = (
   return inside;
 };
 
-const LineChartComponent = () => {
+const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
   const divRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const { xCord, yCord } = useMousePosition({
@@ -136,7 +141,11 @@ const LineChartComponent = () => {
     lineIndex: number;
   } | null>(null);
 
-  console.log(polygons);
+  useEffect(() => {
+    if (polygonState) {
+      setPolygons(polygonState);
+    }
+  }, [polygonState]);
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(
@@ -220,8 +229,8 @@ const LineChartComponent = () => {
                 );
               } else {
                 // Nếu không có va chạm, đóng polygon
-                setPolygons((prevPolygons) =>
-                  prevPolygons.map((polygon) => {
+                setPolygons((prevPolygons) => {
+                  const data = prevPolygons.map((polygon) => {
                     if (polygon.id === currentPolygonId) {
                       return {
                         ...polygon,
@@ -229,8 +238,10 @@ const LineChartComponent = () => {
                       };
                     }
                     return polygon;
-                  })
-                );
+                  });
+                  onPolygonChange([...data]);
+                  return data;
+                });
               }
             } else {
               // Nếu chỉ có 1 hoặc 2 line, xóa polygon
@@ -275,6 +286,7 @@ const LineChartComponent = () => {
     currentPolygonId,
     polygons,
     lineCount,
+    onPolygonChange,
   ]);
 
   const mouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
