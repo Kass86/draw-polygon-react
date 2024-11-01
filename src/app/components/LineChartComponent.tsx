@@ -565,6 +565,7 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
     polygons,
     draggingPolygon,
     draggingPoint,
+    onPolygonChange,
   ]);
 
   const mouseUp = () => {
