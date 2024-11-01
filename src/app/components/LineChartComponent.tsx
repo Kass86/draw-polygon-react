@@ -11,11 +11,11 @@ interface Polygon {
 }
 
 interface Props {
-  polygonState?: Polygon[];
-  onPolygonChange: (polygons: Polygon[]) => void;
+  polygonState: any;
+  onPolygonChange: (newPolygons: any) => void;
+  selectedPolygonId: number | null;
+  showLabels: boolean;
 }
-
-console.log("this ok");
 
 const clamp = (value: number, min: number, max: number): number => {
   return Math.min(Math.max(value, min), max);
@@ -138,7 +138,29 @@ const isPolygonInsidePolygon = (
   return true;
 };
 
-const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
+// Thêm hàm tính toán tâm của đa giác
+const calculatePolygonCenter = (
+  lines: { x1: number; y1: number; x2: number; y2: number }[]
+) => {
+  let sumX = 0;
+  let sumY = 0;
+  const points = lines.map((line) => ({ x: line.x1, y: line.y1 }));
+  points.forEach((point) => {
+    sumX += point.x;
+    sumY += point.y;
+  });
+  return {
+    x: sumX / points.length,
+    y: sumY / points.length,
+  };
+};
+
+const LineChartComponent = ({
+  polygonState,
+  onPolygonChange,
+  selectedPolygonId,
+  showLabels,
+}: Props) => {
   const divRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const { xCord, yCord } = useMousePosition({
@@ -188,6 +210,8 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
 
   // Thêm state để theo dõi số line đã vẽ
   const [lineCount, setLineCount] = useState<number>(0);
+
+  console.log(polygons);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -258,12 +282,23 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
                   )
                 );
               } else {
+                // Tạo popup để nhập ID
+                const polygonId = prompt("Vui lòng nhập ID cho đa giác:");
+                if (polygonId === null) {
+                  // Nếu người dùng bấm Cancel, xóa polygon
+                  setPolygons((prevPolygons) =>
+                    prevPolygons.filter(
+                      (polygon) => polygon.id !== currentPolygonId
+                    )
+                  );
+                  return;
+                }
                 // Nếu không có va chạm, đóng polygon
                 setPolygons((prevPolygons) => {
                   const data = prevPolygons.map((polygon) => {
                     if (polygon.id === currentPolygonId) {
                       return {
-                        ...polygon,
+                        id: +polygonId,
                         lines: [...polygon.lines, closingLine],
                       };
                     }
@@ -650,35 +685,53 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
           onMouseUp={mouseUp}
           onMouseMove={mouseMove}
         >
-          {polygons.map((polygon) => (
-            <g key={polygon.id}>
-              {polygon.lines.map((line, lineIndex) => (
-                <React.Fragment key={lineIndex}>
-                  <line
-                    x1={line.x1}
-                    y1={line.y1}
-                    x2={line.x2}
-                    y2={line.y2}
-                    stroke="black"
-                    strokeWidth="2"
-                    data-polygon-id={polygon.id}
-                    data-line-index={lineIndex}
-                    style={{ cursor: "move" }}
-                  />
-                  <circle
-                    cx={line.x1}
-                    cy={line.y1}
-                    r={3}
-                    fill="red"
-                    onMouseDown={() =>
-                      handleCircleMouseDown(polygon.id, lineIndex, "start")
-                    }
-                    style={{ cursor: "pointer" }}
-                  />
-                </React.Fragment>
-              ))}
-            </g>
-          ))}
+          {polygons.map((polygon) => {
+            const isSelected = selectedPolygonId === polygon.id;
+            const center = calculatePolygonCenter(polygon.lines);
+
+            return (
+              <g key={polygon.id}>
+                {polygon.lines.map((line, lineIndex) => (
+                  <React.Fragment key={lineIndex}>
+                    <line
+                      x1={line.x1}
+                      y1={line.y1}
+                      x2={line.x2}
+                      y2={line.y2}
+                      stroke={isSelected ? "#ff4081" : "black"}
+                      strokeWidth={isSelected ? 3 : 2}
+                      data-polygon-id={polygon.id}
+                      data-line-index={lineIndex}
+                      style={{ cursor: "move" }}
+                    />
+                    <circle
+                      cx={line.x1}
+                      cy={line.y1}
+                      r={3}
+                      fill="red"
+                      onMouseDown={() =>
+                        handleCircleMouseDown(polygon.id, lineIndex, "start")
+                      }
+                      style={{ cursor: "pointer" }}
+                    />
+                  </React.Fragment>
+                ))}
+                {showLabels && (
+                  <text
+                    x={center.x}
+                    y={center.y}
+                    textAnchor="middle"
+                    fill={isSelected ? "#ff4081" : "black"}
+                    fontSize="14"
+                    fontWeight={isSelected ? "bold" : "normal"}
+                    pointerEvents="none"
+                  >
+                    {polygon.id > 10 ? polygon.id : ""}
+                  </text>
+                )}
+              </g>
+            );
+          })}
           {currentLine && (
             <React.Fragment>
               <line
