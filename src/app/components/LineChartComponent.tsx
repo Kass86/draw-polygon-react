@@ -543,6 +543,12 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
           }
         }
       }
+
+      // Thêm điều kiện kiểm tra khi kết thúc drag hoặc resize
+      if (draggingPolygon || draggingPoint) {
+        onPolygonChange([...polygons]);
+      }
+
       setDraggingPolygon(null);
       setDraggingPoint(null);
     };
@@ -551,7 +557,15 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
     return () => {
       window.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [isDrawing, startPoint, currentLine, currentPolygonId, polygons]);
+  }, [
+    isDrawing,
+    startPoint,
+    currentLine,
+    currentPolygonId,
+    polygons,
+    draggingPolygon,
+    draggingPoint,
+  ]);
 
   const mouseUp = () => {
     // Có thể xóa vì đã được xử lý bởi global mouseup
