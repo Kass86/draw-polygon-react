@@ -4,10 +4,12 @@ import React, { useCallback, useMemo, useState } from "react";
 import styles from "./home.module.css";
 import { Box, Button, Stack, Chip } from "@mui/material";
 import LineChartComponent from "./LineChartComponent";
+import ViewPolygonComponent from "./ViewPolygonComponent";
 
 const HomeComponent: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
+  const [isDrawMode, setIsDrawMode] = useState(false);
 
   const handlePolygonChange = useCallback(
     (newPolygons: any) => {
@@ -49,7 +51,7 @@ const HomeComponent: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleBack}
-            disabled={currentIndex < 0}
+            disabled={currentIndex < 0 || !isDrawMode}
             size="small"
           >
             Back
@@ -57,10 +59,18 @@ const HomeComponent: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleNext}
-            disabled={currentIndex >= history.length - 1}
+            disabled={currentIndex >= history.length - 1 || !isDrawMode}
             size="small"
           >
             Next
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => setIsDrawMode(!isDrawMode)}
+            color={isDrawMode ? "error" : "success"}
+            size="small"
+          >
+            {isDrawMode ? "Cancel Draw" : "Draw"}
           </Button>
         </Stack>
 
@@ -77,16 +87,23 @@ const HomeComponent: React.FC = () => {
               color="primary"
               variant="outlined"
               size="small"
+              disabled={!isDrawMode}
             />
           ))}
         </Stack>
       </Box>
 
       <Box sx={{ width: 800, height: 450, backgroundColor: "white" }}>
-        <LineChartComponent
-          polygonState={listPolygonsPresent}
-          onPolygonChange={handlePolygonChange}
-        />
+        <Box sx={{ display: isDrawMode ? "block" : "none" }}>
+          <LineChartComponent
+            polygonState={listPolygonsPresent}
+            onPolygonChange={handlePolygonChange}
+          />
+        </Box>
+
+        <Box sx={{ display: isDrawMode ? "none" : "block" }}>
+          <ViewPolygonComponent polygons={listPolygonsPresent} />
+        </Box>
       </Box>
     </div>
   );

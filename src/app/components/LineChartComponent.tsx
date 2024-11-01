@@ -123,6 +123,21 @@ const isPointInPolygon = (
   return inside;
 };
 
+// Thêm hàm mới để kiểm tra đa giác có nằm hoàn toàn trong đa giác khác không
+const isPolygonInsidePolygon = (
+  innerPolygon: { x1: number; y1: number; x2: number; y2: number }[],
+  outerPolygon: { x1: number; y1: number; x2: number; y2: number }[]
+): boolean => {
+  // Kiểm tra tất cả các đỉnh của đa giác bên trong
+  for (const line of innerPolygon) {
+    const point = { x: line.x1, y: line.y1 };
+    if (!isPointInPolygon(point, outerPolygon)) {
+      return false;
+    }
+  }
+  return true;
+};
+
 const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
   const divRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -197,20 +212,35 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
 
               // Kiểm tra va chạm với tất cả các đa giác khác
               let hasIntersection = false;
+              let hasPolygonInside = false;
+
+              // Tạo đa giác hoàn chỉnh để kiểm tra
+              const completePolygon = {
+                id: currentPolygonId,
+                lines: [...currentPolygon.lines, closingLine],
+              };
+
               for (const polygon of polygons) {
                 if (polygon.id !== currentPolygonId) {
-                  for (const line of polygon.lines) {
-                    if (doLinesIntersect(closingLine, line)) {
-                      hasIntersection = true;
-                      break;
-                    }
+                  // Kiểm tra va chạm
+                  if (
+                    doPolygonsIntersect(completePolygon.lines, polygon.lines)
+                  ) {
+                    hasIntersection = true;
+                    break;
                   }
-                  if (hasIntersection) break;
+
+                  // Kiểm tra đa giác nằm bên trong
+                  if (
+                    isPolygonInsidePolygon(polygon.lines, completePolygon.lines)
+                  ) {
+                    hasPolygonInside = true;
+                    break;
+                  }
                 }
               }
 
-              // Kiểm tra va chạm với các cạnh của chính đa giác đang vẽ
-              // (trừ cạnh đầu và cuối)
+              // Kiểm tra self-intersection
               if (!hasIntersection && currentPolygon.lines.length > 2) {
                 for (let i = 1; i < currentPolygon.lines.length - 1; i++) {
                   if (doLinesIntersect(closingLine, currentPolygon.lines[i])) {
@@ -220,8 +250,8 @@ const LineChartComponent = ({ polygonState, onPolygonChange }: Props) => {
                 }
               }
 
-              if (hasIntersection) {
-                // Nếu có va chạm, xóa polygon
+              if (hasIntersection || hasPolygonInside) {
+                // Nếu có va chạm hoặc có đa giác nằm bên trong, xóa polygon
                 setPolygons((prevPolygons) =>
                   prevPolygons.filter(
                     (polygon) => polygon.id !== currentPolygonId
