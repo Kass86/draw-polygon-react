@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Box } from "@mui/material";
 import React, { useRef, useState, useEffect } from "react";
@@ -210,8 +211,6 @@ const LineChartComponent = ({
 
   // Thêm state để theo dõi số line đã vẽ
   const [lineCount, setLineCount] = useState<number>(0);
-
-  console.log(polygons);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
