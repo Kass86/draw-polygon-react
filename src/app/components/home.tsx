@@ -35,6 +35,7 @@ const HomeComponent: React.FC = () => {
     const newPolygons = listPolygonsPresent.filter(
       (p: any) => p.id !== polygonId
     );
+    setSelectedPolygonId(null);
     handlePolygonChange(newPolygons);
   };
 
