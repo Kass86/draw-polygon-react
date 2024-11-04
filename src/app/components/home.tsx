@@ -3,8 +3,8 @@
 import React, { useCallback, useMemo, useState } from "react";
 import styles from "./home.module.css";
 import { Box, Button, Stack, Chip, Popover, TextField } from "@mui/material";
-import LineChartComponent from "./LineChartComponent";
-import ViewPolygonComponent from "./ViewPolygonComponent";
+import LineChartComponent from "./polygon/LineChartComponent";
+import ViewPolygonComponent from "./polygon/ViewPolygonComponent";
 
 const HomeComponent: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
@@ -14,7 +14,7 @@ const HomeComponent: React.FC = () => {
     null
   );
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [newId, setNewId] = useState<string>("");
+  const [newName, setNewName] = useState<string>("");
   const [showLabels, setShowLabels] = useState(true);
 
   const handlePolygonChange = useCallback(
@@ -58,7 +58,9 @@ const HomeComponent: React.FC = () => {
   const handleOpenReId = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
     if (selectedPolygonId) {
-      setNewId(selectedPolygonId.toString());
+      setNewName(
+        listPolygonsPresent.find((p: any) => p.id === selectedPolygonId)?.name
+      );
     }
   };
 
@@ -67,25 +69,9 @@ const HomeComponent: React.FC = () => {
   };
 
   const handleReId = () => {
-    const newIdNumber = parseInt(newId);
-
-    if (isNaN(newIdNumber)) {
-      alert("ID phải là số!");
-      return;
-    }
-
-    if (
-      listPolygonsPresent.some(
-        (p: any) => p.id === newIdNumber && p.id !== selectedPolygonId
-      )
-    ) {
-      alert("ID này đã tồn tại!");
-      return;
-    }
-
     const updatedPolygons = listPolygonsPresent.map((polygon: any) => {
       if (polygon.id === selectedPolygonId) {
-        return { ...polygon, id: newIdNumber };
+        return { ...polygon, name: newName };
       }
       return polygon;
     });
@@ -93,8 +79,6 @@ const HomeComponent: React.FC = () => {
     const newHistory = [...history];
     newHistory[currentIndex] = updatedPolygons;
     setHistory(newHistory);
-
-    setSelectedPolygonId(newIdNumber);
     handleClose();
   };
 
@@ -156,7 +140,7 @@ const HomeComponent: React.FC = () => {
           {listPolygonsPresent.map((polygon: any) => (
             <Chip
               key={polygon.id}
-              label={`Đa giác ${polygon.id}`}
+              label={`Đa giác ${polygon.name}`}
               onDelete={() => handleDeletePolygon(polygon.id)}
               onClick={() => handleChipClick(polygon.id)}
               color={selectedPolygonId === polygon.id ? "primary" : "default"}
@@ -167,14 +151,14 @@ const HomeComponent: React.FC = () => {
           ))}
         </Stack>
 
-        {selectedPolygonId && (
+        {selectedPolygonId !== null && (
           <Button
             variant="outlined"
             onClick={handleOpenReId}
             size="small"
             sx={{ mb: 2 }}
           >
-            Đổi ID đa giác
+            Đổi tên đa giác
           </Button>
         )}
 
@@ -193,12 +177,11 @@ const HomeComponent: React.FC = () => {
         >
           <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
             <TextField
-              label="ID mới"
-              value={newId}
-              onChange={(e) => setNewId(e.target.value)}
+              label="Tên mới"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
               size="small"
               autoFocus
-              type="number"
             />
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
               <Button size="small" onClick={handleClose}>
