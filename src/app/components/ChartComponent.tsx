@@ -50,6 +50,9 @@ const customLegend = {
         const label = chart.data.labels?.[index];
         const value = dataset.data?.[index];
 
+        // Thêm điều kiện kiểm tra value = 0
+        if (value === 0) return; // Skip nếu giá trị là 0
+
         //@ts-expect-error dont neeđ param
         const { x, y } = datapoint.tooltipPosition();
 
@@ -127,7 +130,6 @@ const customLegend = {
         }
 
         if (attempts > 1) {
-          console.log(attempts);
           const halfwidth = width / 2 + 60;
           const halfheight = height / 2 + 60;
 
@@ -184,11 +186,14 @@ const ChartComponent = ({ chartData }: ChartProps) => {
         data: chartData,
         backgroundColor: ["#1665C1", "#1CAC4B", "#F37227"],
         borderWidth: 0,
-        borderRadius: 5,
-        spacing: 5,
+        borderRadius:
+          chartData.filter((value) => value !== 0).length <= 1 ? 0 : 5,
+        spacing: chartData.filter((value) => value !== 0).length <= 1 ? 0 : 5,
       },
     ],
   };
+
+  console.log(chartData.filter((value) => value !== 0).length);
 
   return (
     <div
