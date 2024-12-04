@@ -567,6 +567,19 @@ const LineChartComponent = ({
               <g key={polygon.id}>
                 {polygon.lines.map((line, lineIndex) => (
                   <React.Fragment key={lineIndex}>
+                    {/* Invisible line for better interaction */}
+                    <line
+                      x1={line.x1}
+                      y1={line.y1}
+                      x2={line.x2}
+                      y2={line.y2}
+                      stroke="transparent"
+                      strokeWidth="15"
+                      data-polygon-id={polygon.id}
+                      data-line-index={lineIndex}
+                      style={{ cursor: "move" }}
+                    />
+                    {/* Visible line */}
                     <line
                       x1={line.x1}
                       y1={line.y1}
@@ -574,19 +587,26 @@ const LineChartComponent = ({
                       y2={line.y2}
                       stroke={isSelected ? "#ff4081" : "black"}
                       strokeWidth={isSelected ? 3 : 2}
-                      data-polygon-id={polygon.id}
-                      data-line-index={lineIndex}
-                      style={{ cursor: "move" }}
+                      pointerEvents="none"
                     />
+                    {/* Invisible circle for better interaction */}
+                    <circle
+                      cx={line.x1}
+                      cy={line.y1}
+                      r={8}
+                      fill="transparent"
+                      onMouseDown={() =>
+                        handleCircleMouseDown(polygon.id, lineIndex, "start")
+                      }
+                      style={{ cursor: "pointer" }}
+                    />
+                    {/* Visible circle */}
                     <circle
                       cx={line.x1}
                       cy={line.y1}
                       r={3}
                       fill="red"
-                      onMouseDown={() =>
-                        handleCircleMouseDown(polygon.id, lineIndex, "start")
-                      }
-                      style={{ cursor: "pointer" }}
+                      pointerEvents="none"
                     />
                   </React.Fragment>
                 ))}
